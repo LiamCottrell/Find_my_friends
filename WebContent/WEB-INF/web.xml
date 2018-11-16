@@ -5,17 +5,37 @@
     id="WebApp_ID" version="3.1">
     <display-name>friends_coursework</display-name>
     <servlet>
-        <servlet-name>REST Service</servlet-name>
+        <servlet-name>jersey</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>com.fasterxml.jackson.jaxrs.json</param-value>
+            <param-value>
+                io.swagger.jaxrs.listing,
+                friends_coursework.city.resource,
+                friends_coursework.test.resource,
+                friends_coursework.api.resource,
+                com.fasterxml.jackson.jaxrs.json
+            </param-value>
         </init-param>
+        <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet-mapping>
-        <servlet-name>REST Service</servlet-name>
+        <servlet-name>jersey</servlet-name>
         <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>Jersey2Config</servlet-name>
+        <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
+        <init-param>
+            <param-name>api.version</param-name>
+            <param-value>1.0.0</param-value>
+        </init-param>
+        <init-param>
+            <param-name>swagger.api.basepath</param-name>
+            <param-value>http://localhost:8080/friends/api</param-value>
+        </init-param>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
