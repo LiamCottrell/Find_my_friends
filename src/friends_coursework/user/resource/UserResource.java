@@ -103,7 +103,7 @@ public class UserResource
 
 
 
-			List<User> result=mapper.scan(User.class, scanExpression);			//retrieve all cities from DynamoDB
+			List<User> result = mapper.scan(User.class, scanExpression);			//retrieve all cities from DynamoDB
 
 			if (result == null) {
 				throw new WebApplicationException("Can't find User", 404);
@@ -111,7 +111,6 @@ public class UserResource
 
 			return Response.status(200).entity(result).build();
 
-			//			return Response.status(200).entity(result).build();
 		} catch (Exception e)
 		{
 			e.printStackTrace();
