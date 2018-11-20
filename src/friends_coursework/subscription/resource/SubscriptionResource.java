@@ -50,7 +50,7 @@ public class SubscriptionResource
 	@Produces(MediaType.APPLICATION_JSON)
 	public Subscription getOneSubscription(@PathParam("subscription_id") String id)
 	{
-		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
+		DynamoDBMapper mapper = DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
 		Subscription subscription = mapper.load(Subscription.class,id);
 
 		if (subscription==null)
@@ -92,7 +92,7 @@ public class SubscriptionResource
 	public Response updateSubscription(@PathParam("subscription_id") String id,
 			@FormParam("status") Integer status) {
 
-		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
+		DynamoDBMapper mapper = DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
 		Subscription subscription = mapper.load(Subscription.class, id);
 
 		if (subscription == null) {
