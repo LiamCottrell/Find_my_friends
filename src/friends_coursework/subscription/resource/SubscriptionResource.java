@@ -12,9 +12,11 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import com.amazonaws.regions.Regions;
 //AWS SDK
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 import friends_coursework.aws.util.*;
 import friends_coursework.subscription.model.*;
+import friends_coursework.user.model.User;
 import friends_coursework.config.*;
 import io.swagger.annotations.Api;
 import io.swagger.jaxrs.PATCH;
@@ -82,7 +84,7 @@ public class SubscriptionResource
 			throw new WebApplicationException(404);
 
 		mapper.delete(subscription);
-		
+
 		return Response.status(200).entity("subscription deleted").build();
 	} //end method
 
@@ -106,6 +108,34 @@ public class SubscriptionResource
 		{
 			e.printStackTrace();
 			return Response.status(400).entity("error in saving subscription").build();
+		}
+	}
+
+	@GET
+	@Path("/user/{user_id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response userSubscriptionSearch(@PathParam("user_id") AttributeValue id){
+
+		DynamoDBMapper mapper = DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
+
+
+		try {
+			DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
+					.withFilterExpression("from_id = :id")
+					.addExpressionAttributeValuesEntry(":id", id);	//create scan expression
+
+			List<Subscription> result = mapper.scan(Subscription.class, scanExpression);			//retrieve all cities from DynamoDB
+
+			if (result == null) {
+				throw new WebApplicationException("Can't find Subscriptions for user", 404);
+			}
+
+			return Response.status(200).entity(result).build();
+
+		} catch (Exception e)
+		{
+			e.printStackTrace();
+			return Response.status(400).entity("error in obtaining users subscriptions").build();
 		}
 	}
 } //end class
