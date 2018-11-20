@@ -11,7 +11,9 @@
             <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>
                 io.swagger.jaxrs.listing,
-                friends_coursework.city.resource,
+                friends_coursework.user.resource,
+                friends_coursework.location.resource,
+                friends_coursework.subscription.resource,
                 friends_coursework.test.resource,
                 friends_coursework.api.resource,
                 com.fasterxml.jackson.jaxrs.json

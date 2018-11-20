@@ -1,4 +1,4 @@
-package friends_coursework.city.resource;
+package friends_coursework.user.resource;
 
 //general Java
 import java.util.*;
@@ -14,71 +14,69 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
 
 import friends_coursework.aws.util.*;
-import friends_coursework.city.model.*;
 import friends_coursework.config.*;
+import friends_coursework.user.model.*;
 import io.swagger.annotations.Api;
 
 @SuppressWarnings("serial")
 
 
-@Path("/city")
-@Api(value="City", description= "City Endpoint")
-public class CityResource
+@Path("/user")
+@Api(value="User", description= "Users Endpoint")
+public class UserResource
 {
 	@POST
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response addACity(	@FormParam("name") String name,
-			@FormParam("longitude") double longitude,
-			@FormParam("latitude") double latitude)
+	public Response addAUser(	@FormParam("user_name") String user_name)
 	{
 		try	{
-			City city=new City(name,longitude,latitude);
+			User user=new User(user_name);
 
 			DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
-			mapper.save(city);
-			return Response.status(201).entity("city saved").build();
+			mapper.save(user);
+			return Response.status(201).entity("user saved").build();
 		} catch (Exception e)
 		{
-			return Response.status(400).entity("error in saving city").build();
+			return Response.status(400).entity("error in saving user").build();
 		}
 	} //end method
 
-	@Path("/{id}")
+	@Path("/{user_id}")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public City getOneCity(@PathParam("id") String id)
+	public User getOneUser(@PathParam("user_id") String id)
 	{
 		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
-		City city=mapper.load(City.class,id);
+		User user=mapper.load(User.class,id);
 
-		if (city==null)
+		if (user==null)
 			throw new WebApplicationException(404);
 
-		return city;
+		return user;
 	} //end method
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Collection<City> getAllCities()
+	public Collection<User> getAllUsers()
 	{
 		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
 		DynamoDBScanExpression scanExpression=new DynamoDBScanExpression();	//create scan expression
-		List<City> result=mapper.scan(City.class, scanExpression);			//retrieve all cities from DynamoDB
+		List<User> result=mapper.scan(User.class, scanExpression);			//retrieve all cities from DynamoDB
 		return result;
 	} //end method
 
 
-	@Path("/{id}")
+	@Path("/{user_id}")
 	@DELETE
-	public Response deleteOneCity(@PathParam("id") String id)
+	public Response deleteOneUser(@PathParam("user_id") String id)
 	{
 		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
-		City city=mapper.load(City.class,id);
+		User user=mapper.load(User.class,id);
 
-		if (city==null)
+		if (user==null)
 			throw new WebApplicationException(404);
 
-		mapper.delete(city);
-		return Response.status(200).entity("deleted").build();
+		mapper.delete(user);
+		return Response.status(200).entity("User deleted").build();
 	} //end method
 } //end class

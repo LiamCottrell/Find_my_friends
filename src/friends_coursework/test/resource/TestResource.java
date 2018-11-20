@@ -4,13 +4,6 @@ package friends_coursework.test.resource;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
-//AWS SDK
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
-
-import friends_coursework.aws.util.*;
-import friends_coursework.city.model.*;
-
 @SuppressWarnings("serial")
 
 @Path("/test")
