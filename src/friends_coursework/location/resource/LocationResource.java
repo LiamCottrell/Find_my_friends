@@ -26,7 +26,7 @@ import io.swagger.annotations.Api;
 public class LocationResource
 {
 	@POST
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response addALocation(	@FormParam("user_id") String user_id,
 			@FormParam("latitude") double latitude,
 			@FormParam("longitude") double longitude)
@@ -37,7 +37,7 @@ public class LocationResource
 
 			DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
 			mapper.save(location);
-			return Response.status(201).entity("location saved").build();
+			return Response.status(201).entity(location).build();
 		} catch (Exception e)
 		{
 			return Response.status(400).entity("error in saving location").build();

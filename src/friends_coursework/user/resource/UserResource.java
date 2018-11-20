@@ -26,15 +26,15 @@ import io.swagger.annotations.Api;
 public class UserResource
 {
 	@POST
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response addAUser(	@FormParam("user_name") String user_name)
 	{
 		try	{
-			User user=new User(user_name);
+			User user = new User(user_name);
 
 			DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
 			mapper.save(user);
-			return Response.status(201).entity("user saved").build();
+			return Response.status(201).entity(user).build();
 		} catch (Exception e)
 		{
 			return Response.status(400).entity("error in saving user").build();

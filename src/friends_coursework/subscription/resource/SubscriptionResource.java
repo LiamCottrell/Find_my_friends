@@ -27,7 +27,7 @@ import io.swagger.jaxrs.PATCH;
 public class SubscriptionResource
 {
 	@POST
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response addASubscription(	@FormParam("status") Integer status,
 			@FormParam("from_id") String from_id,
 			@FormParam("to_id") String to_id)
@@ -37,7 +37,7 @@ public class SubscriptionResource
 
 			DynamoDBMapper mapper = DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
 			mapper.save(subscription);
-			return Response.status(201).entity("subscription saved").build();
+			return Response.status(201).entity(subscription).build();
 		} catch (Exception e)
 		{
 			e.printStackTrace();
