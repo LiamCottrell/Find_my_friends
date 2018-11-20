@@ -12,11 +12,17 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import com.amazonaws.regions.Regions;
 //AWS SDK
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 import friends_coursework.aws.util.*;
 import friends_coursework.config.*;
+import friends_coursework.subscription.model.Subscription;
 import friends_coursework.user.model.*;
 import io.swagger.annotations.Api;
+import io.swagger.jaxrs.PATCH;
 
 @SuppressWarnings("serial")
 
@@ -57,12 +63,13 @@ public class UserResource
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Collection<User> getAllUsers()
+	public Response getAllUsers()
 	{
 		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
 		DynamoDBScanExpression scanExpression=new DynamoDBScanExpression();	//create scan expression
 		List<User> result=mapper.scan(User.class, scanExpression);			//retrieve all cities from DynamoDB
-		return result;
+
+		return Response.status(200).entity(result).build();
 	} //end method
 
 
@@ -79,4 +86,36 @@ public class UserResource
 		mapper.delete(user);
 		return Response.status(200).entity("User deleted").build();
 	} //end method
+
+	@GET
+	@Path("/name/{user_name}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response loginUser(@PathParam("user_name") AttributeValue user_name){
+
+		DynamoDBMapper mapper = DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
+
+
+		try {
+			DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
+					.withFilterExpression("user_name = :username")
+					.addExpressionAttributeValuesEntry(":username", user_name)
+					.withLimit(1);	//create scan expression
+
+
+
+			List<User> result=mapper.scan(User.class, scanExpression);			//retrieve all cities from DynamoDB
+
+			if (result == null) {
+				throw new WebApplicationException("Can't find User", 404);
+			}
+
+			return Response.status(200).entity(result).build();
+
+			//			return Response.status(200).entity(result).build();
+		} catch (Exception e)
+		{
+			e.printStackTrace();
+			return Response.status(400).entity("error in obtaining user").build();
+		}
+	}
 } //end class
