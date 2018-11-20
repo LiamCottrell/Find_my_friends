@@ -25,7 +25,7 @@ import io.swagger.annotations.*;
 				),
 		consumes = {"application/x-www-form-urlencoded"},
 		produces = {"application/json"},
-		schemes = {SwaggerDefinition.Scheme.HTTP, SwaggerDefinition.Scheme.HTTPS}
+		schemes = {SwaggerDefinition.Scheme.HTTP}
 		)
 public interface ApiResource
 {
