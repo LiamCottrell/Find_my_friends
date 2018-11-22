@@ -1,11 +1,12 @@
 package friends_coursework.api.resource;
 
 //JAX-RS
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.Path;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Contact;
+import io.swagger.annotations.Info;
+import io.swagger.annotations.SwaggerDefinition;
 
 @SuppressWarnings("serial")
 

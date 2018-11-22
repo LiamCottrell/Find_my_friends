@@ -1,28 +1,30 @@
 package friends_coursework.user.resource;
 
 //general Java
-import java.util.*;
 //JAX-RS
+import java.util.List;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.media.multipart.FormDataParam;
-
-import com.amazonaws.regions.Regions;
 //AWS SDK
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
-import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
-import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
-import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
-import friends_coursework.aws.util.*;
-import friends_coursework.config.*;
-import friends_coursework.subscription.model.Subscription;
-import friends_coursework.user.model.*;
+import friends_coursework.api.error.resource.APIError;
+import friends_coursework.aws.util.DynamoDBUtil;
+import friends_coursework.config.Config;
+import friends_coursework.user.model.User;
 import io.swagger.annotations.Api;
-import io.swagger.jaxrs.PATCH;
 
 @SuppressWarnings("serial")
 
@@ -50,15 +52,20 @@ public class UserResource
 	@Path("/{user_id}")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public User getOneUser(@PathParam("user_id") String id)
+	public Response getOneUser(@PathParam("user_id") String id)
 	{
-		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
-		User user=mapper.load(User.class,id);
+		DynamoDBMapper mapper = DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
+		User user = mapper.load(User.class,id);
 
-		if (user==null)
-			throw new WebApplicationException(404);
+		APIError error_message = new APIError();
 
-		return user;
+		if (user==null) {
+			error_message.setError_msg("No user with user id `" + id + "`");
+			return Response.status(404).entity(error_message).build();
+		} else {
+			System.out.println(user);
+			return Response.status(200).entity(user).build();
+		}
 	} //end method
 
 	@GET
@@ -66,9 +73,15 @@ public class UserResource
 	public Response getAllUsers()
 	{
 		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
-		DynamoDBScanExpression scanExpression=new DynamoDBScanExpression();	//create scan expression
-		List<User> result=mapper.scan(User.class, scanExpression);			//retrieve all cities from DynamoDB
+		DynamoDBScanExpression scanExpression=new DynamoDBScanExpression();		//create scan expression
 
+		APIError error_message = new APIError();
+
+		List<User> result = mapper.scan(User.class, scanExpression);			//retrieve all cities from DynamoDB
+		if (result==null) {
+			error_message.setError_msg("No users saved");
+			return Response.status(404).entity(error_message).build();
+		}
 		return Response.status(200).entity(result).build();
 	} //end method
 
@@ -80,11 +93,15 @@ public class UserResource
 		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
 		User user=mapper.load(User.class,id);
 
-		if (user==null)
-			throw new WebApplicationException(404);
+		APIError error_message = new APIError();
 
-		mapper.delete(user);
-		return Response.status(200).entity("User deleted").build();
+		if (user==null) {
+			error_message.setError_msg("User with user_id `" + id + "` not found.");
+			return Response.status(404).entity(error_message).build();
+		} else {
+			mapper.delete(user);
+			return Response.status(200).entity("User deleted").build();
+		}
 	} //end method
 
 	@GET
@@ -100,7 +117,6 @@ public class UserResource
 					.withFilterExpression("user_name = :username")
 					.addExpressionAttributeValuesEntry(":username", user_name)
 					.withLimit(1);	//create scan expression
-
 
 
 			List<User> result = mapper.scan(User.class, scanExpression);			//retrieve all cities from DynamoDB

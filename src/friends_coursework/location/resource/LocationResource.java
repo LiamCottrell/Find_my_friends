@@ -1,21 +1,26 @@
 package friends_coursework.location.resource;
 
-//general Java
-import java.util.*;
-//JAX-RS
+import java.util.List;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.media.multipart.FormDataParam;
-
-import com.amazonaws.regions.Regions;
 //AWS SDK
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
+import com.google.gson.Gson;
 
-import friends_coursework.aws.util.*;
-import friends_coursework.location.model.*;
-import friends_coursework.config.*;
+import friends_coursework.api.error.resource.APIError;
+import friends_coursework.aws.util.DynamoDBUtil;
+import friends_coursework.config.Config;
+import friends_coursework.location.model.Location;
 import io.swagger.annotations.Api;
 
 @SuppressWarnings("serial")
@@ -30,42 +35,158 @@ public class LocationResource
 	public Response addALocation(	@FormParam("user_id") String user_id,
 			@FormParam("latitude") double latitude,
 			@FormParam("longitude") double longitude)
-			
 	{
-		try	{
-			Location location=new Location(user_id,longitude,latitude);
+		APIError error_handler = new APIError();
+		Boolean set_responce = false;
+		Response my_responce = null;
+		DynamoDBMapper mapper = null;
 
-			DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
-			mapper.save(location);
-			return Response.status(201).entity(location).build();
-		} catch (Exception e)
-		{
-			return Response.status(400).entity("error in saving location").build();
+		Location location = new Location(user_id,longitude,latitude);
+
+		try {
+			if(location.getUserID()==null) {
+				Gson gson = new Gson();
+
+				error_handler.setError_msg("Required data has not been provided.");
+				error_handler.setError_body(gson.toJson(location));
+				my_responce = Response.status(400).entity(error_handler).build();
+				set_responce = true;
+			}
+		} catch (Exception e) {
+			error_handler.setError_msg("API encountered error checking values for null.");
+			String sStackTrace = e.toString(); // stack trace as a string
+			error_handler.setError_body(sStackTrace);
+			my_responce = Response.status(501).entity(error_handler).build();
+			set_responce = true;
 		}
+
+		if(set_responce == false) {
+			try { //try connect to db
+				mapper = DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
+
+			} catch (Exception e) {
+				error_handler.setError_msg("Database table `" + Config.DYNAMODB_LOCATIONS_TABLE_NAME + "` is not reachable, make sure connection is present.");
+				String sStackTrace = e.toString(); // stack trace as a string
+				error_handler.setError_body(sStackTrace);
+				my_responce = Response.status(503).entity(error_handler).build();
+				set_responce = true;
+
+			}
+		}
+
+		if(set_responce == false) {
+			try	{
+				mapper.save(location);
+				my_responce = Response.status(201).entity(location).build();
+				set_responce = true;
+
+			} catch (Exception e)
+			{
+				error_handler.setError_msg("API doesn't know how to handle request.");
+				String sStackTrace = e.toString(); // stack trace as a string
+				error_handler.setError_body(sStackTrace);
+				my_responce = Response.status(501).entity(error_handler).build();
+				set_responce = true;
+			}
+		}
+
+		return my_responce;
+
 	} //end method
 
 	@Path("/{location_id}")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Location getOneLocation(@PathParam("location_id") String id)
+	public Response getOneLocation(@PathParam("location_id") String id)
 	{
-		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
-		Location location=mapper.load(Location.class,id);
+		APIError error_handler = new APIError();
+		Boolean set_responce = false;
+		Response my_responce = null;
+		DynamoDBMapper mapper = null;
+		Location location = null;
 
-		if (location==null)
-			throw new WebApplicationException(404);
+		try { //try connect to db
+			mapper = DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
+			location = mapper.load(Location.class, id);			//retrieve all cities from DynamoDB
 
-		return location;
-	} //end method
+		} catch (Exception e) {
+			error_handler.setError_msg("Database table `" + Config.DYNAMODB_LOCATIONS_TABLE_NAME + "` is not reachable, make sure connection is present.");
+			String sStackTrace = e.toString(); // stack trace as a string
+			error_handler.setError_body(sStackTrace);
+			my_responce = Response.status(503).entity(error_handler).build();
+			set_responce = true;
+
+		}
+		if(set_responce==false) { //if connection is successful
+			try {
+				if (location==null) { //no locations matching id
+					error_handler.setError_msg("No location with location id `" + id + "`");
+					my_responce =  Response.status(404).entity(error_handler).build();
+					set_responce = true;
+
+				} else { //if result is found matching id
+					my_responce = Response.status(200).entity(location).build();
+					set_responce = true;
+				}
+			} catch (Exception e) {
+				error_handler.setError_msg("API doesn't know how to handle request");
+				String sStackTrace = e.toString(); // stack trace as a string
+				error_handler.setError_body(sStackTrace);
+				my_responce = Response.status(501).entity(error_handler).build();
+				set_responce = true;
+			}
+		}
+		return my_responce;
+	}
+
+
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Collection<Location> getAllLocations()
+	public Response getAllLocations()
 	{
-		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
-		DynamoDBScanExpression scanExpression=new DynamoDBScanExpression();	//create scan expression
-		List<Location> result=mapper.scan(Location.class, scanExpression);			//retrieve all cities from DynamoDB
-		return result;
+		APIError error_handler = new APIError();
+		Boolean set_responce = false;
+		List<Location> result = null;
+		Response my_responce = null;
+		DynamoDBMapper mapper = null;
+		DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();	//create scan expression
+
+		try {
+			mapper = DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
+			result = mapper.scan(Location.class, scanExpression);			//retrieve all cities from DynamoDB
+
+		} catch (Exception e) {
+			error_handler.setError_msg("Database table `" + Config.DYNAMODB_LOCATIONS_TABLE_NAME + "` is not reachable, make sure connection is present.");
+
+			String sStackTrace = e.toString(); // stack trace as a string
+			error_handler.setError_body(sStackTrace);
+			my_responce = Response.status(503).entity(error_handler).build();
+			set_responce = true;
+		}
+
+		if(set_responce==false) {
+			try {
+				if(result.isEmpty()==true) {
+					error_handler.setError_msg("Database table `" + Config.DYNAMODB_LOCATIONS_TABLE_NAME + "` has no values.");
+					my_responce = Response.status(404).entity(error_handler).build();
+					set_responce = true;
+
+				} else {
+					my_responce = Response.status(200).entity(result).build();
+					set_responce = true;
+				}
+			} catch (Exception e) {
+				error_handler.setError_msg("API has encountered an error");
+				String sStackTrace = e.toString(); // stack trace as a string
+				error_handler.setError_body(sStackTrace);
+				my_responce = Response.status(503).entity(error_handler).build();
+				set_responce = true;
+			}
+		}
+
+		return my_responce;
+
 	} //end method
 
 
@@ -73,13 +194,49 @@ public class LocationResource
 	@DELETE
 	public Response deleteOneLocation(@PathParam("location_id") String id)
 	{
-		DynamoDBMapper mapper=DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
-		Location location=mapper.load(Location.class,id);
 
-		if (location==null)
-			throw new WebApplicationException(404);
+		APIError error_handler = new APIError();
+		Boolean set_responce = false;
+		Location location = null;
+		Response my_responce = null;
+		DynamoDBMapper mapper = null;
 
-		mapper.delete(location);
-		return Response.status(200).entity("location deleted").build();
+		try {
+			mapper = DynamoDBUtil.getDBMapper(Config.REGION,Config.LOCAL_ENDPOINT);
+			location = mapper.load(Location.class, id);			//retrieve all cities from DynamoDB
+
+		} catch (Exception e) {
+			error_handler.setError_msg("Database table `" + Config.DYNAMODB_LOCATIONS_TABLE_NAME + "` is not reachable, make sure connection is present.");
+
+			String sStackTrace = e.toString(); // stack trace as a string
+			error_handler.setError_body(sStackTrace);
+			my_responce = Response.status(503).entity(error_handler).build();
+			set_responce = true;
+		}
+		
+		if(set_responce==false) { //if connection is successful
+			try {
+				if (location==null) { //no locations matching id
+					error_handler.setError_msg("No location with location id `" + id + "`");
+					my_responce =  Response.status(404).entity(error_handler).build();
+					set_responce = true;
+
+				} else { //if result is found matching id
+					mapper.delete(location);
+					my_responce = Response.status(200).entity("Location id `" + id + "` deleted.").build();
+					set_responce = true;
+				}
+			} catch (Exception e) {
+				error_handler.setError_msg("API doesn't know how to handle request");
+				String sStackTrace = e.toString(); // stack trace as a string
+				error_handler.setError_body(sStackTrace);
+				my_responce = Response.status(501).entity(error_handler).build();
+				set_responce = true;
+			}
+		}
+		
+		return my_responce;
+
+		
 	} //end method
 } //end class
