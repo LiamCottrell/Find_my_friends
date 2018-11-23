@@ -1,6 +1,6 @@
 //API keys
 var mapBoxApiKey="sk.eyJ1IjoibGlhbWNvdHRyZWxsIiwiYSI6ImNqb2lyeTYwYTBiYW0za21kM2F1cnZnaDEifQ.ZzWwgyMX3ziVNyuhIWv3TA";
-var openWeatherAPIKey="c1e8f1040e9aa955348f8333b8aa1ff9";
+// var openWeatherAPIKey="c1e8f1040e9aa955348f8333b8aa1ff9";
 var baseURL="api";
 
 //the document ready function

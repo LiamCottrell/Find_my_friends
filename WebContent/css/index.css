@@ -1,32 +1,26 @@
-body
-{
-font-family: Arial;
-font-size: 16pt;
+body {
+	font-family: Arial;
+	font-size: 16pt;
 }
 
-#cityDetails
-{
-text-align: center;
+#cityDetails {
+	text-align: center;
 }
 
-#cityDetails section
-{
-padding: 5px;
+#cityDetails section {
+	padding: 5px;
 }
 
-#map
-{
-width: 100%;
-height: 300px;
+#map {
+	width: 100%;
+	height: 300px;
 }
 
-.selected
-{
-color: #ff0000;
-font-weight: bold;
+.selected {
+	color: #ff0000;
+	font-weight: bold;
 }
 
-img
-{
-vertical-align: middle;
+img {
+	vertical-align: middle;
 }
